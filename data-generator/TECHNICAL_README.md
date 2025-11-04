@@ -56,15 +56,10 @@ npm run assessment
 npm run generate
 ```
 
-4. Generate GeoJSON from trip events:
-```bash
-npm run geojson
-```
-
-5. The scripts will (run from `data-generator/` folder):
+4. The scripts will (run from `data-generator/` folder):
    - **npm start**: Generate single comprehensive trip for development/testing
    - **npm run assessment** / **npm run generate**: Generate 5 different trip scenarios for candidate assessment
-   - **npm run geojson**: Process `trip-events.json` and create GeoJSON LineString feature files in `test/` folder
+   - **npm run geojson**: Process `trip-events.json` and create GeoJSON files (development only)
 
 ## Output Files
 
@@ -126,48 +121,14 @@ Single comprehensive trip for development/testing. Here's an example location_pi
 }
 ```
 
-### GeoJSON Route Files (`test/` folder)
-The GeoJSON generator creates two output files in the `test/` directory:
-
-1. **`test/trip-route.geojson`** - Complete GeoJSON FeatureCollection with metadata:
-```json
-{
-  "type": "FeatureCollection",
-  "features": [{
-    "type": "Feature",
-    "properties": {
-      "name": "Fleet Trip Route",
-      "vehicle_id": "VH_123",
-      "trip_id": "trip_20251103_100000",
-      "total_points": 4115,
-      "start_time": "2025-11-03T09:55:00.000Z",
-      "end_time": "2025-11-04T20:13:00.000Z",
-      "event_types_included": ["tracking_started", "location_ping", "time_milestone", "distance_milestone", "tracking_stopped"]
-    },
-    "geometry": {
-      "type": "LineString",
-      "coordinates": [[-122.419449, 37.774938], [-122.41934, 37.775026], ...]
-    }
-  }]
-}
-```
-
-2. **`test/trip-route-simple.json`** - Simple LineString geometry for debugging:
-```json
-{
-  "type": "LineString",
-  "coordinates": [[-122.419449, 37.774938], [-122.41934, 37.775026], ...]
-}
-```
 
 ## Project Structure
 
 ```
 fleet-tracking-assessment/
-├── ASSESSMENT_INSTRUCTIONS.md    # 🎯 Main assessment entry point for candidates
+├── README.md                      # 🎯 Main assessment entry point for candidates
 ├── HOW_TO_GENERATE_DATA.md       # 🛠️ Data generation instructions for candidates
 ├── FLEET_TRACKING_EVENT_TYPES.md # 📖 Complete event type reference (27 types)
-├── README.md                      # This file (development documentation)
 ├── assessment-fallback-data/      # 💾 Pre-generated fallback data for candidates
 │   ├── trip_1_cross_country.json  # Fallback cross-country trip
 │   ├── trip_2_urban_dense.json    # Fallback urban trip
@@ -176,26 +137,21 @@ fleet-tracking-assessment/
 │   ├── trip_5_regional_logistics.json # Fallback logistics trip
 │   └── fleet-tracking-event-types.md # Event type reference
 └── data-generator/                # 🔧 Data generation tools (for development)
+    ├── TECHNICAL_README.md        # This file (technical documentation)
     ├── generate-trip-events.js    # Single trip generator (development)
     ├── generate-assessment-trips.js # Assessment data generator (5 scenarios)
     ├── event-generators.js        # Specific placement event generators
     ├── random-event-generators.js # Random placement event generators
     ├── package.json               # Dependencies and scripts
     ├── package-lock.json          # Dependency lock file
-    ├── trip-events.json           # Development trip events (~4,200 events)
-    ├── node_modules/              # Dependencies
-    ├── assessment-YYYY-MM-DD-HH-MM-SS/ # Generated assessment folder
-    │   ├── trip_1_cross_country.json  # Cross-country long haul (varies)
-    │   ├── trip_2_urban_dense.json    # Dense urban delivery (varies)
-    │   ├── trip_3_mountain_cancelled.json # Mountain route cancelled (varies)
-    │   ├── trip_4_southern_technical.json # Southern route with issues (varies)
-    │   ├── trip_5_regional_logistics.json # Regional logistics (varies)
-    │   └── fleet-tracking-event-types.md # Event type reference
-    └── test/                      # Test scripts and outputs
-        ├── generate-geojson.js    # GeoJSON generator script
-        ├── trip-route.geojson     # Complete GeoJSON FeatureCollection
-        ├── trip-route-simple.json # Simple LineString geometry
-        └── README.md              # Test folder documentation
+    ├── node_modules/              # Dependencies (after npm install)
+    └── assessment-YYYY-MM-DD-HH-MM-SS/ # Generated assessment folder
+        ├── trip_1_cross_country.json  # Cross-country long haul (varies)
+        ├── trip_2_urban_dense.json    # Dense urban delivery (varies)
+        ├── trip_3_mountain_cancelled.json # Mountain route cancelled (varies)
+        ├── trip_4_southern_technical.json # Southern route with issues (varies)
+        ├── trip_5_regional_logistics.json # Regional logistics (varies)
+        └── fleet-tracking-event-types.md # Event type reference
 ```
 
 ## Configuration
@@ -222,6 +178,63 @@ You can modify the following constants in `data-generator/generate-trip-events.j
 - **Technical/System**: `signal_degraded`, `signal_lost`, `signal_recovered`, `device_battery_low`, `device_overheating`, `device_error`
 - **Conditional**: `fuel_level_low`, `refueling_started`, `refueling_completed`, `trip_paused`, `trip_resumed`, `vehicle_telemetry`
 - **Trip Cancellation**: `trip_cancelled` (5% chance, occurs early in trip, stops all further event generation)
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+**1. OSRM API Connection Issues**
+```
+Error: Request failed with status code 429 (Too Many Requests)
+Error: ENOTFOUND router.project-osrm.org
+```
+- **Solution**: The public OSRM API has rate limits. Wait a few minutes and try again
+- **Alternative**: If persistent, check your internet connection or try again later
+- **Workaround**: Use fallback data in `assessment-fallback-data/` folder
+
+**2. Node.js Version Issues**
+```
+Error: Unexpected token '??' (nullish coalescing)
+SyntaxError: Unexpected token 'optional chaining'
+```
+- **Solution**: Update to Node.js v14+ (recommended: v18+)
+- **Check version**: `node --version`
+- **Update**: Download from [nodejs.org](https://nodejs.org)
+
+**3. npm install Failures**
+```
+Error: EACCES: permission denied
+Error: Cannot resolve dependency tree
+```
+- **Solution**: Clear npm cache: `npm cache clean --force`
+- **Alternative**: Delete `node_modules/` and `package-lock.json`, then run `npm install`
+- **Permissions**: On macOS/Linux, avoid using `sudo` with npm
+
+**4. Large File Generation Issues**
+```
+Error: JavaScript heap out of memory
+Error: EMFILE: too many open files
+```
+- **Solution**: Increase Node.js memory: `node --max-old-space-size=4096 generate-assessment-trips.js`
+- **File limits**: On macOS/Linux: `ulimit -n 4096`
+
+**5. Empty or Corrupted Output Files**
+- **Check**: Ensure stable internet connection during generation
+- **Verify**: Generated files should be 100KB+ (except cancelled trips)
+- **Solution**: Delete corrupted files and regenerate
+
+**6. Generation Takes Too Long**
+- **Expected time**: 2-5 minutes for full assessment data
+- **If stuck**: Check console for error messages
+- **Solution**: Restart generation, ensure OSRM API is accessible
+
+### Getting Help
+
+If issues persist:
+1. Check the console output for specific error messages
+2. Verify Node.js version compatibility (v18+ recommended)
+3. Ensure stable internet connection for OSRM API calls
+4. Use fallback data as alternative: `assessment-fallback-data/`
 
 ## Next Steps
 

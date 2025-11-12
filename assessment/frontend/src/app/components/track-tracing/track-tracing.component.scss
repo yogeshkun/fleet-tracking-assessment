@@ -177,3 +177,16 @@
 .progress-bar-container.dragging { cursor: grabbing; }
 .progress-bar-container.dragging .progress-bar-fill { transition: none; }
 
+@media (max-width: 480px) {
+
+  .wrapper{
+      position: relative;
+      top: 0;
+      right: 0;
+      overflow: auto;
+  }
+
+  .sidebar-container {
+    margin-top: 4rem;
+  }
+}

@@ -2,6 +2,7 @@
   height: 100%;
   width: 100%;
 }
+
 .homepage-container {
   display: flex;
   flex-direction: column;
@@ -14,14 +15,18 @@
 /* Header styling */
 .header {
   display: flex;
+  align-items: center;
   gap: 16px;
   padding: 0.8rem;
 }
+
 .left-side {
   display: flex;
 }
+
 .header-title {
   display: flex;
+  align-items: center;
   flex-direction: column;
   gap: 0.2rem;
 }
@@ -37,8 +42,18 @@
   color: #576574;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+}
+
 /* Tabs */
 .homepage-tabs {
+  white-space: nowrap;
+  display: flex;
+  gap: 0.6rem;
 }
 
 .homepage-tabs button {
@@ -48,7 +63,6 @@
   font-weight: 500;
   padding: 0.4rem 1.2rem;
   border-radius: 20px;
-  margin-right: 0.6rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -101,9 +115,45 @@
   margin-top: 0;
 }
 
-.tab-live, .tab-history {
+.tab-live,
+.tab-history {
   height: 100%;
 }
+
+.disclaimer {
+  flex: 2;
+  background: #f9fafc;
+  border-left: 3px solid #007bff;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #555;
+  line-height: 1.4;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.disclaimer strong {
+  color: #222;
+}
+
+.disclaimer .warning {
+  color: #c82333;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.disclaimer em {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .disclaimer {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
 
 /* Loading state */
 .loading {
@@ -117,6 +167,62 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* ✅ Medium screens (Tablets) */
+@media (max-width: 1024px) {
+  .disclaimer {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.9rem;
+    margin: 0.6rem 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .disclaimer {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
+    margin: 0.5rem 0;
+    border-left-width: 2px;
+  }
+
+  .disclaimer em {
+    display: inline;
+  }
+
+  .disclaimer .warning {
+    display: block;
+    margin-top: 0.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .header, .right-side, .actions  {
+    flex-direction: column;
+  }
+  .body-container {
+    padding: 0.3rem;
+  }
+
+  .disclaimer {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    margin: 0.4rem 0;
+    text-align: justify;
+  }
+
+  .disclaimer .warning {
+    font-size: 0.75rem;
+  }
 }

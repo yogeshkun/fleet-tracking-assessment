@@ -16,7 +16,7 @@ export class HomepageComponent {
   vehicleToTrip: Record<string, string> = {};
   // UI
   activeTab: 'live' | 'history' = 'live';
-  displayMessage = 'Select Vehicle';
+  displayMessage = 'Loading';
 
   constructor(private tripService: TripService) { }
 
@@ -46,9 +46,8 @@ export class HomepageComponent {
         console.log("this.vehicleToTrip", this.vehicleToTrip)
         console.log("this.vehicles", this.vehicles)
         console.log("this.vehiclesForLive", this.vehiclesForLive)
-
         this.isLoading = false;
-      },
+            },
       error: (err) => {
         console.error('Failed to load vehicles:', err);
         this.isLoading = true;
@@ -62,6 +61,12 @@ export class HomepageComponent {
 
   selectTab(tabname: any) {
     this.activeTab = tabname;
+    if (this.activeTab === 'live') {
+      this.isLoading = false;
+    } else {
+      this.isLoading = true;
+      this.displayMessage = 'Select Vehicle'
+    }
   }
   onVehicleSelected(vin: string) {
     if (!vin) return;

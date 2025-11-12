@@ -13,8 +13,7 @@
 
   <div class="map-wrapper">
     <google-map #map height="100%" width="100%" [center]="center" [zoom]="zoom">
-      <!-- CustomOverlay instances render DOM elements on the map and are created in the component code.
-			     We intentionally do not render default <map-marker> elements here to avoid duplicate pins. -->
+
     </google-map>
   </div>
 
@@ -39,18 +38,9 @@
       <span class="value">{{ selectedVehicleInfo.timestamp | date:'medium' }}</span>
     </div>
 
-    <!-- 👇 New section for Last Packet fields -->
     <div class="last-packet-section" *ngIf="selectedVehicleInfo.lastPacket">
       <h4>Last Packet Received</h4>
 
-      <!-- <div class="info-row">
-        <span class="label">Event Type</span>
-        <span class="value">{{ selectedVehicleInfo.lastPacket.event_type }}</span>
-      </div> -->
-      <!-- <div class="info-row">
-        <span class="label">Event ID</span>
-        <span class="value">{{ selectedVehicleInfo.lastPacket.event_id }}</span>
-      </div> -->
       <div class="info-row">
         <span class="label">Timestamp</span>
         <span class="value">{{ selectedVehicleInfo.lastPacket.timestamp | date:'medium' }}</span>

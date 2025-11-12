@@ -1,0 +1,33 @@
+<!-- <div class="container mt-4">
+  <h2>Fleet Trip Dashboard</h2>
+
+  <ul>
+    <li
+      *ngFor="let trip of trips"
+      (click)="loadSummary(trip)"
+      class="trip-item"
+    >
+      {{ trip }}
+    </li>
+  </ul>
+
+  <div *ngIf="loading">Loading summary...</div>
+
+  <div *ngIf="selectedSummary && !loading" class="card p-3 mt-3">
+    <h4>Trip Summary: {{ selectedSummary.tripId }}</h4>
+    <p><strong>Vehicle:</strong> {{ selectedSummary.vehicleId }}</p>
+    <p><strong>Status:</strong> {{ selectedSummary.status }}</p>
+    <p><strong>Duration (min):</strong> {{ selectedSummary.durationMin | number:'1.0-0' }}</p>
+    <p><strong>Distance (km):</strong> {{ selectedSummary.distance }}</p>
+    <p><strong>Average Speed (km/h):</strong> {{ selectedSummary.avgSpeed }}</p>
+    <p><strong>Overspeed Count:</strong> {{ selectedSummary.overspeedCount }}</p>
+    <p><strong>Signal Lost Count:</strong> {{ selectedSummary.signalLostCount }}</p>
+  </div>
+</div> -->
+
+<div class="body-container">
+  <!-- <app-trip-tracing [events]="tripEvents"></app-trip-tracing> -->
+   <app-homepage></app-homepage>
+</div>
+
+

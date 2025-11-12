@@ -1,0 +1,13 @@
+.trip-item {
+  cursor: pointer;
+  color: #007bff;
+  margin: 4px 0;
+}
+.trip-item:hover {
+  text-decoration: underline;
+}
+
+.body-container {
+  height: 100vh;
+  width: 100vw;
+}

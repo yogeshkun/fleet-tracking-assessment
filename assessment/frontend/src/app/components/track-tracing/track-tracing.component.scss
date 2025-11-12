@@ -1,0 +1,179 @@
+/* Full-height 70% / 30% layout for track-tracing component */
+.track-tracing-container {
+	height: 100%; /* full viewport height; change to 100% if parent sets height */
+	display: flex;
+	flex-direction: row;
+	gap: 16px;
+}
+
+.map-container {
+	/* Fixed 70% width */
+	flex: 0 0 70%;
+	height: 100%;
+  position: relative;
+}
+
+.sidebar-container {
+	/* Fixed 30% width */
+	flex: 1;
+	height: 100%;
+	overflow: auto;
+}
+
+/* Ensure the google-map fills its container */
+.full-map,
+.full-map > * {
+	height: 100% !important;
+	width: 100% !important;
+	display: block;
+}
+
+/* Responsive: stack vertically on small screens */
+@media (max-width: 768px) {
+	.track-tracing-container {
+		flex-direction: column;
+		height: auto;
+	}
+	.map-container,
+	.sidebar-container {
+		flex: 0 0 auto;
+		width: 100%;
+	}
+	.map-container {
+		height: 50vh;
+	}
+}
+
+.sidebar-content {
+	padding: 16px;
+}
+.sidebar-content h3 {
+	margin-top: 0;
+}
+.row {
+	display: flex;
+	justify-content: space-between;
+	padding: 6px 0;
+	border-bottom: 1px dashed rgba(0,0,0,0.06);
+}
+.label {
+	color: #555;
+	font-weight: 600;
+}
+.value {
+	color: #111;
+}
+.actions {
+	margin-top: 12px;
+	display: flex;
+	gap: 8px;
+}
+.actions button {
+	padding: 6px 10px;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+	background: #fff;
+	cursor: pointer;
+}
+.loading { padding: 16px; color: #666 }
+
+.wrapper{
+    position: absolute;
+    top: 22px;
+    right: 70px;
+    display: flex;
+    gap: 1rem;
+    background-color: azure;
+    padding: 1rem;
+    button{
+        background: beige;
+        height: 2rem;
+        width: 5rem;
+        border: 1px solid;
+        cursor: pointer;
+        border-radius: 8px;
+    }
+}
+
+.speed-controls {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.speed-controls button {
+	padding: 6px 8px;
+	border-radius: 6px;
+	border: 1px solid #aaa;
+	background: #f4f4f4;
+	cursor: pointer;
+}
+.speed-controls button.active {
+	background: #0078d4;
+	color: white;
+	border-color: #005a9e;
+}
+.speed-label { margin-left: 8px; font-weight: 600; }
+
+/* Progress bar styling */
+.progress-bar-container {
+	position: absolute;
+	bottom: 28px; /* lift a bit to make room for tooltip */
+	left: 70px;
+	right: 70px;
+	height: 10px;
+	background-color: #e0e0e0;
+	border-radius: 3px;
+	cursor: pointer;
+	overflow: visible; /* allow tooltip to escape the container */
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	z-index: 10000; /* ensure it's above the map canvas */
+}
+
+.progress-bar-fill {
+	height: 100%;
+	background: linear-gradient(90deg, #0078d4, #00d4ff);
+	border-radius: 3px;
+	transition: width 0.1s ease-out;
+}
+
+.progress-bar-container:hover .progress-bar-fill {
+    background: linear-gradient(90deg, #005a9e, #00a8cc);
+}
+
+/* Tooltip shown when hovering over progress bar */
+.progress-tooltip {
+	position: absolute;
+	bottom: 20px; /* sits above the bar */
+	transform: translateX(-50%);
+	padding: 6px 8px;
+	background: rgba(0,0,0,0.9);
+	color: #fff;
+	font-size: 12px;
+	border-radius: 4px;
+	pointer-events: none;
+	white-space: nowrap;
+	z-index: 10001; /* above the progress bar */
+	box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+/* Percentage badge shown near the progress bar */
+.progress-percentage {
+	position: absolute;
+	top: -22px;
+	right: 0;
+	background: rgba(0,0,0,0.75);
+	color: #fff;
+	font-size: 12px;
+	padding: 4px 8px;
+	border-radius: 12px;
+	pointer-events: none;
+	z-index: 10002;
+}
+
+@media (max-width: 768px) {
+	.progress-percentage { top: -26px; right: 6px; font-size: 11px; }
+}
+
+.progress-bar-container.dragging { cursor: grabbing; }
+.progress-bar-container.dragging .progress-bar-fill { transition: none; }
+

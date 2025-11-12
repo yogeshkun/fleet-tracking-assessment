@@ -1,0 +1,82 @@
+<div class="track-tracing-container">
+  <!-- 70%: Map area -->
+  <div class="map-container">
+    <google-map
+      class="full-map"
+      height="100%"
+      width="100%"
+      [center]="center"
+      [zoom]="zoom"
+    >
+      <!-- Stoppage markers -->
+  <map-marker *ngFor="let s of stoppagePoints"
+      [position]="s.location"
+    [icon]="s.icon">
+  </map-marker>
+    </google-map>
+    <div class="wrapper">
+
+  <button type="button" (click)="startVehicleAnimation()">Start</button>
+  <!-- Single toggle Pause/Resume button; disabled until animation starts -->
+  <button type="button" [disabled]="!isAnimating" (click)="togglePauseResume()">{{ isPaused ? 'Resume' : 'Pause' }}</button>
+
+      <!-- Fixed speed options: 1x, 5x, 10x -->
+      <div class="speed-controls">
+        <button type="button" [class.active]="speed===1" (click)="setSpeed(1)">1x</button>
+        <button type="button" [class.active]="speed===5" (click)="setSpeed(5)">5x</button>
+        <button type="button" [class.active]="speed===10" (click)="setSpeed(10)">10x</button>
+        <span class="speed-label">Speed: {{speed}}x</span>
+      </div>
+
+      <button type="button" (click)="reset()">Reset</button>
+
+    </div>
+
+    <!-- Progress bar -->
+    <div #progressBar class="progress-bar-container"
+      [class.dragging]="isDraggingProgressBar"
+      (click)="onProgressBarClick($event)"
+      (mousemove)="onProgressBarMouseMove($event)"
+      (mouseleave)="onProgressBarMouseLeave()"
+      (mousedown)="onProgressBarMouseDown($event)">
+      <div class="progress-bar-fill" [style.width.%]="progressPercentage"></div>
+
+      <!-- Hover / seek tooltip -->
+      <div class="progress-tooltip" *ngIf="showProgressTooltip"
+           [style.left.px]="hoverLeft"
+           [innerText]="progressHoverTimestamp"></div>
+  <!-- Percentage badge -->
+  <div class="progress-percentage" [innerText]="(progressPercentage | number:'1.0-0') + '%'" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <!-- 30%: Sidebar / events counts -->
+  <div class="sidebar-container">
+    <div *ngIf="!isLoading && tripSummary; else loading" class="sidebar-content">
+      <h3>Trip Summary</h3>
+      <div class="row"><span class="label">Trip ID</span><span class="value">{{ tripSummary.tripId }}</span></div>
+      <div class="row"><span class="label">Vehicle</span><span class="value">{{ tripSummary.vehicleId }}</span></div>
+      <div class="row"><span class="label">Start Time</span><span class="value">{{ tripSummary.startTime }}</span></div>
+      <div class="row"><span class="label">End Time</span><span class="value">{{ tripSummary.endTime }}</span></div>
+      <div class="row"><span class="label">Duration (hrs)</span><span class="value">{{ tripSummary.durationHours }}</span></div>
+      <div class="row"><span class="label">Total Distance (km)</span><span class="value">{{ tripSummary.totalDistanceKm }}</span></div>
+      <div class="row"><span class="label">Start Location</span><span class="value">{{ tripSummary.startLocation }}</span></div>
+      <div class="row"><span class="label">End Location</span><span class="value">{{ tripSummary.endLocation }}</span></div>
+
+      <!-- Insights Section -->
+      <hr style="margin: 16px 0; border: none; border-top: 1px solid #ddd;">
+      <h3 style="margin-top: 0;">Insights</h3>
+      <div *ngIf="insights">
+        <div class="row"><span class="label">Total Kilometers</span><span class="value">{{ insights.totalKilometers }} km</span></div>
+        <div class="row"><span class="label">Total Running Hours</span><span class="value">{{ insights.totalRunningHours }} hrs</span></div>
+        <div class="row"><span class="label">Total Energy Consumed</span><span class="value">{{ insights.totalEnergyConsumed }} %</span></div>
+        <div class="row"><span class="label">Total Stoppages</span><span class="value">{{ insights.totalStoppages }}</span></div>
+        <div class="row"><span class="label">Average Speed</span><span class="value">{{ insights.averageSpeed }} km/h</span></div>
+      </div>
+    </div>
+    <ng-template #loading>
+      <div class="loading">Loading trip summary...</div>
+    </ng-template>
+  </div>
+</div>
+

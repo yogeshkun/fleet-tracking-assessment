@@ -29,6 +29,7 @@ export class CustomOverlay extends google.maps.OverlayView {
     private labelDiv!: HTMLDivElement;
     private img: HTMLImageElement;
     private tooltipDiv!: HTMLDivElement;
+    private signalQuality: 'excellent' | 'good' | 'poor' | null = null;
     vehicleSpeed: any;
     odometer: any;
     eventDateTime: any;
@@ -426,6 +427,7 @@ export class CustomOverlay extends google.maps.OverlayView {
         if (position?.vehicleSpeed !== undefined && position?.vehicleSpeed !== null) {
             // store as numeric-ish string like "39.3 Km/Hr"
             this.vehicleSpeed = `${position?.vehicleSpeed} Km/Hr`;
+            this.signalQuality = position?.signal_quality;
             if (this.tooltipDiv) this.updateTooltipContent();
         }
         if (position?.eventDateTime !== undefined && position?.eventDateTime !== null) {
@@ -438,12 +440,13 @@ export class CustomOverlay extends google.maps.OverlayView {
         this.emitter.emit('set_position', { position: this.position });
     }
 
-    public updateOverlayContent(data: { vehicleSpeed?: number, eventDateTime?: string, mode?: string, locationName? : string , odometer:number}) {
+    public updateOverlayContent(data: { vehicleSpeed?: number, eventDateTime?: string, mode?: string, locationName? : string , odometer:number, signal_quality: 'excellent' | 'good' | 'poor' | null}) {
         if(data?.vehicleSpeed){
             this.speedButton.innerHTML = '';
             this.speedButton.appendChild(this.speedIcon);
             this.speedButton.append(` ${this.vehicleSpeed}`);
             this.vehicleSpeed = `${data?.vehicleSpeed} Km/Hr`;
+            this.signalQuality = data?.signal_quality;
             if (this.tooltipDiv) this.updateTooltipContent();
         }
         if(data?.mode){
@@ -484,19 +487,48 @@ export class CustomOverlay extends google.maps.OverlayView {
 
     // Update tooltip text (current speed and timestamp) when requested
     private formatTooltipSpeed(): string {
-        const v = this.vehicleSpeed ?? '';
-        const s = String(v);
-        const match = s.match(/[\d\.]+/);
-        const num = match ? match[0] : s || '-';
-        const ts = this.formatTimestampForTooltip(this.eventDateTime);
-        return `Speed: ${num} kmh \nTimestamp: ${ts}`;
+      const v = this.vehicleSpeed ?? '';
+      const s = String(v);
+      const match = s.match(/[\d\.]+/);
+      const num = match ? match[0] : s || '-';
+      const ts = this.formatTimestampForTooltip(this.eventDateTime);
+      const signalIcon = this.getSignalIcon();
+
+      return `${signalIcon} <b>Speed:</b> ${num} km/h<br><b>Timestamp:</b> ${ts}`;
     }
 
     private updateTooltipContent() {
         if (!this.tooltipDiv) return;
-        this.tooltipDiv.innerText = this.formatTooltipSpeed();
+        this.tooltipDiv.innerHTML = this.formatTooltipSpeed();
     }
 
+    private getSignalColor(): string {
+      const quality = this.signalQuality?.toLowerCase?.() ?? "unknown";
+
+      switch (quality) {
+          case "excellent":
+              return "#00C853"; // green
+          case "good":
+              return "#FFD600"; // yellow
+          case "poor":
+              return "#D50000"; // red
+          default:
+              return "#9E9E9E"; // gray (unknown / undefined / null)
+      }
+    }
+
+    private getSignalIcon(): string {
+        const color = this.getSignalColor();
+        console.log("color in signal", color);
+        // Simple Wi-Fi arcs SVG (scalable, color dynamic)
+        return `
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                <path d="M8.5 16a6 6 0 0 1 7 0"/>
+                <path d="M12 20h.01"/>
+            </svg>
+        `;
+    }
 
     // updateLabel() {
     //     // Display label with real-time data (e.g., speed, angle)
@@ -693,7 +725,7 @@ export class CustomOverlay extends google.maps.OverlayView {
         map.setCenter(currentLatLng, currentZoom);
     }
 
-    updateOverlayData(data: { vehicleSpeed?: number, eventDateTime?: string, mode?: string, locationName?: string, odometer:number }) {
+    updateOverlayData(data: { vehicleSpeed?: number, eventDateTime?: string, mode?: string, locationName?: string, odometer:number, signal_quality: 'excellent' | 'good' | 'poor' | null }) {
         if (this.labelDiv) {
             this.updateOverlayContent(data);
         }

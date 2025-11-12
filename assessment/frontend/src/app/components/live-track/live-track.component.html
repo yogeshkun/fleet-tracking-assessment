@@ -1,50 +1,88 @@
 <div class="live-track-container">
-	<div class="controls">
-		<h3>Live Vehicles</h3>
-		<ul>
-			<li *ngFor="let v of vehicles"
-			    [class.active]="selectedVehicleId === (v.vin || v.vehicle_id || v.id)"
-			    [class.disabled]="!isVehicleAvailable(v.vin || v.vehicle_id || v.id)"
-			    [attr.disabled]="!isVehicleAvailable(v.vin || v.vehicle_id || v.id) ? true : null"
-			    (click)="isVehicleAvailable(v.vin || v.vehicle_id || v.id) && selectVehicle(v.vin || v.vehicle_id || v.id)">
-				{{ v.vin || v.vehicle_id || v.id }}
-			</li>
-		</ul>
-	</div>
+  <div class="controls">
+    <h3>Live Vehicles</h3>
+    <ul>
+      <li *ngFor="let v of vehicles" [class.active]="selectedVehicleId === (v.vin || v.vehicle_id || v.id)"
+        [class.disabled]="!isVehicleAvailable(v.vin || v.vehicle_id || v.id)"
+        [attr.disabled]="!isVehicleAvailable(v.vin || v.vehicle_id || v.id) ? true : null"
+        (click)="isVehicleAvailable(v.vin || v.vehicle_id || v.id) && selectVehicle(v.vin || v.vehicle_id || v.id)">
+        {{ v.vin || v.vehicle_id || v.id }}
+      </li>
+    </ul>
+  </div>
 
-	<div class="map-wrapper">
-		<google-map #map height="100%" width="100%" [center]="center" [zoom]="zoom">
-			<!-- CustomOverlay instances render DOM elements on the map and are created in the component code.
+  <div class="map-wrapper">
+    <google-map #map height="100%" width="100%" [center]="center" [zoom]="zoom">
+      <!-- CustomOverlay instances render DOM elements on the map and are created in the component code.
 			     We intentionally do not render default <map-marker> elements here to avoid duplicate pins. -->
-		</google-map>
-	</div>
+    </google-map>
+  </div>
 
-	<!-- Vehicle info sidebar -->
-	<div class="vehicle-info-sidebar" *ngIf="selectedVehicleInfo">
-		<h3>Vehicle Location</h3>
-		<div class="info-row">
-			<span class="label">Vehicle ID</span>
-			<span class="value">{{ selectedVehicleId }}</span>
-		</div>
-		<div class="info-row">
-			<span class="label">Latitude</span>
-			<span class="value">{{ selectedVehicleInfo.lat | number:'1.6-6' }}</span>
-		</div>
-		<div class="info-row">
-			<span class="label">Longitude</span>
-			<span class="value">{{ selectedVehicleInfo.lng | number:'1.6-6' }}</span>
-		</div>
-		<div class="info-row" *ngIf="selectedVehicleInfo.speed !== undefined">
-			<span class="label">Speed</span>
-			<span class="value">{{ selectedVehicleInfo.speed | number:'1.1-1' }} km/h</span>
-		</div>
-		<div class="info-row" *ngIf="selectedVehicleInfo.heading">
-			<span class="label">Heading</span>
-			<span class="value">{{ selectedVehicleInfo.heading | number:'1.0-0' }}°</span>
-		</div>
-		<div class="info-row" *ngIf="selectedVehicleInfo.timestamp">
-			<span class="label">Last Updated</span>
-			<span class="value">{{ selectedVehicleInfo.timestamp | date:'medium' }}</span>
-		</div>
-	</div>
+  <!-- Vehicle info sidebar -->
+  <div class="vehicle-info-sidebar" *ngIf="selectedVehicleInfo">
+    <h3>Vehicle Location</h3>
+
+    <div class="info-row">
+      <span class="label">Vehicle ID</span>
+      <span class="value">{{ selectedVehicleId }}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Latitude</span>
+      <span class="value">{{ selectedVehicleInfo.lat | number:'1.6-6' }}</span>
+    </div>
+    <div class="info-row">
+      <span class="label">Longitude</span>
+      <span class="value">{{ selectedVehicleInfo.lng | number:'1.6-6' }}</span>
+    </div>
+    <div class="info-row" *ngIf="selectedVehicleInfo.timestamp">
+      <span class="label">Last Updated</span>
+      <span class="value">{{ selectedVehicleInfo.timestamp | date:'medium' }}</span>
+    </div>
+
+    <!-- 👇 New section for Last Packet fields -->
+    <div class="last-packet-section" *ngIf="selectedVehicleInfo.lastPacket">
+      <h4>Last Packet Received</h4>
+
+      <!-- <div class="info-row">
+        <span class="label">Event Type</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.event_type }}</span>
+      </div> -->
+      <!-- <div class="info-row">
+        <span class="label">Event ID</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.event_id }}</span>
+      </div> -->
+      <div class="info-row">
+        <span class="label">Timestamp</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.timestamp | date:'medium' }}</span>
+      </div>
+      <div class="info-row" *ngIf="selectedVehicleInfo.lastPacket.movement">
+        <span class="label">Speed</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.movement.speed_kmh }} km/h</span>
+      </div>
+      <div class="info-row" *ngIf="selectedVehicleInfo.lastPacket.movement">
+        <span class="label">Heading</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.movement.heading_degrees }}°</span>
+      </div>
+      <div class="info-row" *ngIf="selectedVehicleInfo.lastPacket.location">
+        <span class="label">Accuracy</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.location.accuracy_meters }} m</span>
+      </div>
+      <div class="info-row" *ngIf="selectedVehicleInfo.lastPacket.device">
+        <span class="label">Battery</span>
+        <span class="value">
+          {{ selectedVehicleInfo.lastPacket.device.battery_level }}%
+          <span *ngIf="selectedVehicleInfo.lastPacket.device.charging">(Charging)</span>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="label">Signal Quality</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.signal_quality }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Overspeed</span>
+        <span class="value">{{ selectedVehicleInfo.lastPacket.overspeed ? 'Yes' : 'No' }}</span>
+      </div>
+    </div>
+  </div>
+
 </div>

@@ -50,3 +50,31 @@ google-map{ height:100%; width:100%; display:block }
     .value { color:#111; text-align:right; flex:1; margin-left:8px; }
   }
 }
+
+.last-packet-section {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #ccc;
+
+  h4 {
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+
+    .label {
+      font-weight: 500;
+      color: #555;
+    }
+
+    .value {
+      color: #222;
+      text-align: right;
+    }
+  }
+}

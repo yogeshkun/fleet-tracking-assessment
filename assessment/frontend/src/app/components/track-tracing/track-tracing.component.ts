@@ -62,13 +62,14 @@ export class TrackTracingComponent {
 
   constructor(private tripService: TripService) {}
 
-  extractLatLng(dataArray: any[]): { lat: number; lng: number, degree: number, vehicleSpeed?: number, eventDateTime?: string }[] {
+  extractLatLng(dataArray: any[]): { lat: number; lng: number, degree: number, vehicleSpeed?: number, eventDateTime?: string, signal_quality: 'excellent' | 'good' | 'poor' | null }[] {
     return dataArray.map((entry) => ({
       lat: entry.location.lat,
       lng: entry.location.lng,
       degree: entry?.movement?.heading_degrees || 0,
       vehicleSpeed: entry?.movement?.speed_kmh ?? null,
-      eventDateTime: entry.timestamp || entry.time || entry.event_time || null
+      eventDateTime: entry.timestamp || entry.time || entry.event_time || null,
+      signal_quality: entry?.signal_quality || null
     }));
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, OnChanges, SimpleChanges, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, OnChanges, SimpleChanges, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
 import { GoogleMap } from '@angular/google-maps';
 import { LiveService } from 'src/app/services/live.service';
 import { Subscription, Observable } from 'rxjs';
@@ -18,7 +18,7 @@ export class LiveTrackComponent implements OnInit, OnDestroy, OnChanges {
   vehicleMarkers: Record<string, { position: google.maps.LatLngLiteral; label?: string; icon?: any }> = {};
   // Per-vehicle custom overlays (uses the same overlay used in track-tracing)
   customOverlays: Record<string, CustomOverlay> = {};
-  vehicleData: Record<string, { lat: number; lng: number; speed?: number; heading?: number; timestamp?: string }> = {};
+  vehicleData: Record<string, { lat: number; lng: number; speed?: number; heading?: number; timestamp?: string; lastPacket?: any }> = {};
   selectedVehicleId: string | null = null;
   firstVehicleReceived: string | null = null; // Track the first vehicle to center on
   subscriptions: Subscription[] = [];
@@ -26,7 +26,11 @@ export class LiveTrackComponent implements OnInit, OnDestroy, OnChanges {
   center: google.maps.LatLngLiteral = { lat: 22.7230144, lng: 86.3884608 };
   zoom = 6;
 
-  constructor(private liveService: LiveService, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private liveService: LiveService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) { }
 
   ngOnInit(): void {
     // If parent already passed vehicles synchronously, start subscriptions
@@ -75,29 +79,31 @@ export class LiveTrackComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   handleLiveMessage(id: string, msg: any) {
-    // Expect msg to contain lat, lng, speed, heading etc. Adapt to your backend shape.
-    const lat = msg.location?.lat ?? msg.lat ?? msg.latitude;
-    const lng = msg.location?.lng ?? msg.lng ?? msg.longitude;
-    const speed = msg.movement?.speed_kmh ?? msg.speed ?? null;
-    const heading = msg.movement?.heading_degrees ?? msg.heading ?? 0;
-    const timestamp = msg.timestamp ?? msg.eventDateTime ?? new Date().toISOString();
+    const mapInstance = this.map?.googleMap as google.maps.Map | undefined;
 
-    if (lat == null || lng == null) return;
+    this.ngZone.run(() => {
+      const lat = msg.location?.lat ?? msg.lat ?? msg.latitude;
+      const lng = msg.location?.lng ?? msg.lng ?? msg.longitude;
+      const speed = msg.movement?.speed_kmh ?? msg.speed ?? null;
+      const heading = msg.movement?.heading_degrees ?? msg.heading ?? 0;
+      const timestamp = msg.timestamp ?? msg.eventDateTime ?? new Date().toISOString();
 
-    // Store vehicle data for display in sidebar
-    this.vehicleData[id] = {
-      lat: +lat,
-      lng: +lng,
-      speed: speed ? +speed : undefined,
-      heading: heading ? +heading : 0,
-      timestamp: timestamp
-    };
-    console.log("vehicleData from subscibe ", this.vehicleData)
-    // Trigger change detection so template re-renders and isVehicleAvailable() is called
-    this.cdr.markForCheck();
-    // Use a CustomOverlay (same style as track-tracing) to render a rotated truck image
-    try {
-      const mapInstance = this.map?.googleMap as google.maps.Map | undefined;
+      if (lat == null || lng == null) return;
+
+      // ✅ Store latest vehicle data + last packet
+      this.vehicleData[id] = {
+        lat: +lat,
+        lng: +lng,
+        speed: speed ? +speed : undefined,
+        heading: heading ? +heading : 0,
+        timestamp: timestamp,
+        lastPacket: msg
+      };
+
+      // ✅ Update the UI manually since stream callback runs outside Angular zone
+      this.cdr.detectChanges();
+
+      // ✅ Create or update the custom overlay
       if (mapInstance) {
         if (!this.customOverlays[id]) {
           const overlayOptions: any = {
@@ -117,53 +123,141 @@ export class LiveTrackComponent implements OnInit, OnDestroy, OnChanges {
           };
           const overlay = new CustomOverlay(overlayOptions);
           overlay.setMap(mapInstance);
-          // Ensure initial rotation/position set
           overlay.setAngle(heading ?? 0);
           overlay.setPosition({ lat: +lat, lng: +lng, vehicleSpeed: speed ?? 0, eventDateTime: timestamp });
           this.customOverlays[id] = overlay;
         } else {
-          // Update existing overlay
           const overlay = this.customOverlays[id];
           overlay.setPosition({ lat: +lat, lng: +lng, vehicleSpeed: speed ?? 0, eventDateTime: timestamp });
           overlay.setAngle(heading ?? 0);
         }
       }
-    } catch (e) {
-      console.warn('Failed to create/update custom overlay for', id, e);
-    }
 
-    // On first vehicle data: center on it and store as first vehicle
-    const mapInstance = this.map?.googleMap as any;
-    if (!this.firstVehicleReceived) {
-      this.firstVehicleReceived = id;
-      // Auto-select the first vehicle that sends data so the list reflects the centered vehicle
-      if (!this.selectedVehicleId) {
-        this.selectedVehicleId = id;
+      // ✅ Handle centering logic
+      if (!this.firstVehicleReceived) {
+        this.firstVehicleReceived = id;
+        // Auto-select the first vehicle that sends data so the list reflects the centered vehicle
+        if (!this.selectedVehicleId) {
+          this.selectedVehicleId = id;
+        }
+        if (mapInstance && typeof mapInstance.setCenter === 'function') {
+          mapInstance.setCenter({ lat: +lat, lng: +lng });
+        } else {
+          this.center = { lat: +lat, lng: +lng };
+        }
       }
-      if (mapInstance && typeof mapInstance.setCenter === 'function') {
-        mapInstance.setCenter({ lat: +lat, lng: +lng });
-      } else {
-        this.center = { lat: +lat, lng: +lng };
+      // Keep the first (or selected) vehicle centered
+      else if (this.selectedVehicleId === id) {
+        // Selected vehicle: center on it as it updates (use direct map API to avoid binding conflicts)
+        if (mapInstance && typeof mapInstance.setCenter === 'function') {
+          mapInstance.setCenter({ lat: +lat, lng: +lng });
+        } else {
+          this.center = { lat: +lat, lng: +lng };
+        }
       }
-    }
-    // Keep the first (or selected) vehicle centered
-    else if (this.selectedVehicleId === id) {
-      // Selected vehicle: center on it as it updates (use direct map API to avoid binding conflicts)
-      if (mapInstance && typeof mapInstance.setCenter === 'function') {
-        mapInstance.setCenter({ lat: +lat, lng: +lng });
-      } else {
-        this.center = { lat: +lat, lng: +lng };
+      else if (this.selectedVehicleId === null && this.firstVehicleReceived === id) {
+        // No vehicle selected: keep centering on the first vehicle that sent data
+        if (mapInstance && typeof mapInstance.setCenter === 'function') {
+          mapInstance.setCenter({ lat: +lat, lng: +lng });
+        } else {
+          this.center = { lat: +lat, lng: +lng };
+        }
       }
-    }
-    else if (this.selectedVehicleId === null && this.firstVehicleReceived === id) {
-      // No vehicle selected: keep centering on the first vehicle that sent data
-      if (mapInstance && typeof mapInstance.setCenter === 'function') {
-        mapInstance.setCenter({ lat: +lat, lng: +lng });
-      } else {
-        this.center = { lat: +lat, lng: +lng };
-      }
-    }
+    });
   }
+
+
+  // handleLiveMessage(id: string, msg: any) {
+  //   // Expect msg to contain lat, lng, speed, heading etc. Adapt to your backend shape.
+  //   const lat = msg.location?.lat ?? msg.lat ?? msg.latitude;
+  //   const lng = msg.location?.lng ?? msg.lng ?? msg.longitude;
+  //   const speed = msg.movement?.speed_kmh ?? msg.speed ?? null;
+  //   const heading = msg.movement?.heading_degrees ?? msg.heading ?? 0;
+  //   const timestamp = msg.timestamp ?? msg.eventDateTime ?? new Date().toISOString();
+
+  //   if (lat == null || lng == null) return;
+
+  //   // Store vehicle data for display in sidebar
+  //   this.vehicleData[id] = {
+  //     lat: +lat,
+  //     lng: +lng,
+  //     speed: speed ? +speed : undefined,
+  //     heading: heading ? +heading : 0,
+  //     timestamp: timestamp,
+  //     lastPacket: msg
+  //   };
+  //   console.log("vehicleData from subscibe ", this.vehicleData)
+  //   // Trigger change detection so template re-renders and isVehicleAvailable() is called
+  //   this.cdr.markForCheck();
+  //   // Use a CustomOverlay (same style as track-tracing) to render a rotated truck image
+  //   try {
+  //     const mapInstance = this.map?.googleMap as google.maps.Map | undefined;
+  //     if (mapInstance) {
+  //       if (!this.customOverlays[id]) {
+  //         const overlayOptions: any = {
+  //           image: '/assets/truck.svg',
+  //           position: { lat: +lat, lng: +lng },
+  //           angle: heading ?? 0,
+  //           path: [{ lat: +lat, lng: +lng, degree: heading ?? 0, vehicleSpeed: speed ?? 0, eventDateTime: timestamp }],
+  //           isSmoothReCenter: false,
+  //           isSmoothTurn: false,
+  //           speed: 1,
+  //           width: '36px',
+  //           height: '58px',
+  //           marginLeft: '-17px',
+  //           marginTop: '-30px',
+  //           zIndex: 1000,
+  //           isLabel: false
+  //         };
+  //         const overlay = new CustomOverlay(overlayOptions);
+  //         overlay.setMap(mapInstance);
+  //         // Ensure initial rotation/position set
+  //         overlay.setAngle(heading ?? 0);
+  //         overlay.setPosition({ lat: +lat, lng: +lng, vehicleSpeed: speed ?? 0, eventDateTime: timestamp });
+  //         this.customOverlays[id] = overlay;
+  //       } else {
+  //         // Update existing overlay
+  //         const overlay = this.customOverlays[id];
+  //         overlay.setPosition({ lat: +lat, lng: +lng, vehicleSpeed: speed ?? 0, eventDateTime: timestamp });
+  //         overlay.setAngle(heading ?? 0);
+  //       }
+  //     }
+  //   } catch (e) {
+  //     console.warn('Failed to create/update custom overlay for', id, e);
+  //   }
+
+  //   // On first vehicle data: center on it and store as first vehicle
+  //   const mapInstance = this.map?.googleMap as any;
+  //   if (!this.firstVehicleReceived) {
+  //     this.firstVehicleReceived = id;
+  //     // Auto-select the first vehicle that sends data so the list reflects the centered vehicle
+  //     if (!this.selectedVehicleId) {
+  //       this.selectedVehicleId = id;
+  //     }
+  //     if (mapInstance && typeof mapInstance.setCenter === 'function') {
+  //       mapInstance.setCenter({ lat: +lat, lng: +lng });
+  //     } else {
+  //       this.center = { lat: +lat, lng: +lng };
+  //     }
+  //   }
+  //   // Keep the first (or selected) vehicle centered
+  //   else if (this.selectedVehicleId === id) {
+  //     // Selected vehicle: center on it as it updates (use direct map API to avoid binding conflicts)
+  //     if (mapInstance && typeof mapInstance.setCenter === 'function') {
+  //       mapInstance.setCenter({ lat: +lat, lng: +lng });
+  //     } else {
+  //       this.center = { lat: +lat, lng: +lng };
+  //     }
+  //   }
+  //   else if (this.selectedVehicleId === null && this.firstVehicleReceived === id) {
+  //     // No vehicle selected: keep centering on the first vehicle that sent data
+  //     if (mapInstance && typeof mapInstance.setCenter === 'function') {
+  //       mapInstance.setCenter({ lat: +lat, lng: +lng });
+  //     } else {
+  //       this.center = { lat: +lat, lng: +lng };
+  //     }
+  //   }
+  // }
 
   selectVehicle(vehicleId: string) {
     this.selectedVehicleId = vehicleId;
@@ -219,8 +313,8 @@ export class LiveTrackComponent implements OnInit, OnDestroy, OnChanges {
             ov.RemoveMarker && ov.RemoveMarker();
             ov.setMap && ov.setMap(null);
           }
-        } catch (err) {}
+        } catch (err) { }
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 }

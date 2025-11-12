@@ -1,19 +1,122 @@
-.homepage-container {
-  width: 100%;
+:host {
   height: 100%;
+  width: 100%;
+}
+.homepage-container {
   display: flex;
   flex-direction: column;
-  .header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-  }
-  .body-container {
-    flex: 1;
-    .tab-live, .tab-history {
-      height: 100%;
-    }
-  }
+  background: linear-gradient(145deg, #f8f9fc, #e9eef5);
+  font-family: 'Inter', sans-serif;
+  color: #222;
+  height: 100%;
+}
 
+/* Header styling */
+.header {
+  display: flex;
+  gap: 16px;
+  padding: 0.8rem;
+}
+.left-side {
+  display: flex;
+}
+.header-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
 
+.header-title .name {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #0a3d62;
+}
+
+.header-title .sub {
+  font-size: 1rem;
+  color: #576574;
+}
+
+/* Tabs */
+.homepage-tabs {
+}
+
+.homepage-tabs button {
+  background: transparent;
+  border: 2px solid #0a3d62;
+  color: #0a3d62;
+  font-weight: 500;
+  padding: 0.4rem 1.2rem;
+  border-radius: 20px;
+  margin-right: 0.6rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.homepage-tabs button:hover {
+  background: #0a3d62;
+  color: #fff;
+}
+
+.homepage-tabs button.active {
+  background: #0a3d62;
+  color: #fff;
+}
+
+/* Right-side filter */
+.right-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vehicle-select label {
+  font-size: 0.9rem;
+  color: #555;
+  margin-right: 0.5rem;
+}
+
+.vehicle-select select {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  transition: border-color 0.3s ease;
+}
+
+.vehicle-select select:focus {
+  border-color: #0a3d62;
+  outline: none;
+}
+
+/* Body area */
+.body-container {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.2rem;
+  margin: 1rem;
+  margin-top: 0;
+}
+
+.tab-live, .tab-history {
+  height: 100%;
+}
+
+/* Loading state */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
+  color: #0a3d62;
+  height: 100%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }

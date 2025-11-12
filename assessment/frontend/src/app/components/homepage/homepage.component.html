@@ -1,13 +1,17 @@
 <div class="homepage-container">
   <div class="header">
     <div class="left-side">
+      <div class="header-title">
+        <span class="name">Yogesh Kunkawalekar</span>
+        <span class="sub">Fleet Tracking Dashboard Assessment</span>
+      </div>
+    </div>
+    <div class="right-side">
       <div class="homepage-tabs">
         <button type="button" [class.active]="activeTab === 'live'" (click)="selectTab('live')">Live</button>
         <button type="button" [class.active]="activeTab === 'history'" (click)="selectTab('history')">History</button>
       </div>
-    </div>
-    <div *ngIf="activeTab === 'history'" class="right-side">
-      <div class="vehicle-select">
+      <div *ngIf="activeTab === 'history'" class="vehicle-select">
         <label for="vehicleSelect">Select vehicle:</label>
         <select id="vehicleSelect" #vehicleSelect (change)="onVehicleSelected(vehicleSelect.value)">
           <option value="" selected>Select a vehicle</option>
@@ -18,18 +22,18 @@
   </div>
 
   <div class="body-container">
-      <!-- Live tab -->
-      <div *ngIf="!isLoading && activeTab === 'live' && vehiclesForLive.length > 0" class="tab-live">
-        <app-live-track [vehiclesFromParent]="vehiclesForLive"></app-live-track>
-      </div>
+    <!-- Live tab -->
+    <div *ngIf="!isLoading && activeTab === 'live' && vehiclesForLive.length > 0" class="tab-live">
+      <app-live-track [vehiclesFromParent]="vehiclesForLive"></app-live-track>
+    </div>
 
-      <!-- History tab -->
-      <div *ngIf="!isLoading && activeTab === 'history'" class="tab-history">
-          <app-track-tracing [allTripEvents]="allTripEvents"></app-track-tracing>
-      </div>
+    <!-- History tab -->
+    <div *ngIf="!isLoading && activeTab === 'history'" class="tab-history">
+      <app-track-tracing [allTripEvents]="allTripEvents"></app-track-tracing>
+    </div>
 
-      <div *ngIf="isLoading">
-        <span>{{ displayMessage }}</span>
-      </div>
+    <div *ngIf="isLoading" class="loading">
+      <span>{{ displayMessage }}</span>
+    </div>
   </div>
 </div>

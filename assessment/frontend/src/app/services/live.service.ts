@@ -2,22 +2,31 @@ import { Injectable } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Observable } from 'rxjs';
 import { TripService } from './trip.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class LiveService {
-  // NOTE: backend websocket endpoint — adjust if your server exposes a different URL
-  private wsBase = 'ws://localhost:4000/live';
-  // base REST API (reuse TripService base)
-  private apiBase = 'http://localhost:4000/api/trips';
+  // Use environment values for websocket and API base
+  private wsBase = environment.wsBase;
+  private apiBase = environment.apiBase; // note: apiBase includes /api
   // Track active EventSources to avoid duplicate connections
   private activeStreams: Map<string, EventSource> = new Map();
 
   constructor(private tripService: TripService) {
-    // try to reuse TripService baseUrl if available
-    try { this.apiBase = (this.tripService as any).baseUrl || this.apiBase; } catch (e) {}
+    // try to reuse TripService baseUrl if available (fallback)
+    try {
+      const tripBase = (this.tripService as any).baseUrl;
+      if (tripBase) {
+        // tripBase may include /trips resource; derive apiBase
+        const idx = tripBase.indexOf('/trips');
+        if (idx > -1) {
+          this.apiBase = tripBase.substring(0, idx);
+        }
+      }
+    } catch (e) {}
   }
 
-  // Subscribe to a vehicle's live stream. Returns an Observable that emits raw messages from server.
+  // Subscribe to a vehicle's live stream. Returns a WebSocketSubject that emits raw messages from server.
   // The backend is expected to accept a query param ?vehicle=<id> to filter stream for a vehicle.
   subscribeToVehicle(vehicleId: string): WebSocketSubject<any> {
     const url = `${this.wsBase}?vehicle=${encodeURIComponent(vehicleId)}`;
@@ -27,7 +36,7 @@ export class LiveService {
   // Subscribe to HTTP Server-Sent Events (SSE) stream for a specific trip and vehicle
   // Returns an Observable which emits parsed JSON messages from the stream endpoint
   subscribeToVehicleStream(tripFilename: string, vehicleId: string): Observable<any> {
-    const url = `${this.apiBase}/details/stream/${encodeURIComponent(tripFilename)}/${encodeURIComponent(vehicleId)}`;
+    const url = `${this.apiBase}/trips/details/stream/${encodeURIComponent(tripFilename)}/${encodeURIComponent(vehicleId)}`;
     const streamKey = `${tripFilename}::${vehicleId}`;
 
     return new Observable((observer) => {
